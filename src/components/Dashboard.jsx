@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { ThemeToggle } from './ThemeToggle';
+import { Secao } from './Secao';
+import { NavegacaoDashboard } from './NavegacaoDashboard';
 import { ResumoCards } from './cards/ResumoCards';
 import { ReceitaMensal } from './charts/ReceitaMensal';
 import { OcupacaoMensal } from './charts/OcupacaoMensal';
@@ -10,6 +12,7 @@ import { HeatmapCalendario } from './charts/HeatmapCalendario';
 import { TabelaReservas } from './TabelaReservas';
 import { InsightsPanel } from './InsightsPanel';
 import { SecaoFiscal } from './SecaoFiscal';
+import { useSecoes } from '../hooks/useSecoes';
 
 function formatPeriodo(reservas) {
   if (!reservas.length) return '';
@@ -29,6 +32,7 @@ function formatPeriodo(reservas) {
 
 export function Dashboard({ dados, onReset }) {
   const { dark } = useTheme();
+  const { secoes, toggle } = useSecoes();
   const dashboardRef = useRef();
 
   const handleExportPdf = async () => {
@@ -55,76 +59,130 @@ export function Dashboard({ dados, onReset }) {
       }}
     >
       <header
-        className="flex items-center justify-between px-8 py-5 border-b sticky top-0 z-10"
+        className="sticky top-0 z-10 border-b"
         style={{
           borderColor: dark ? '#1e293b' : '#e2e8f0',
           background: dark ? '#0f172a' : '#f8fafc',
         }}
       >
-        <div className="flex items-center gap-4">
-          <span className="text-xl font-semibold tracking-tight">
-            Host Insights
-          </span>
-          <span
-            className="text-xs px-2 py-0.5 rounded-full"
-            style={{
-              background: dark ? '#1e293b' : '#e2e8f0',
-              color: dark ? '#64748b' : '#94a3b8',
-            }}
-          >
-            {formatPeriodo(dados.reservas)}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleExportPdf}
-            className="text-sm px-4 py-2 rounded-lg font-medium transition-all cursor-pointer border-0"
-            style={{ background: '#2563eb', color: '#ffffff' }}
-          >
-            Exportar PDF
-          </button>
-          <ThemeToggle />
-          <button
-            onClick={onReset}
-            className="text-sm cursor-pointer bg-transparent border-0"
-            style={{ color: dark ? '#475569' : '#94a3b8' }}
-          >
-            Novo arquivo
-          </button>
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-semibold tracking-tight">
+                Host Insights
+              </span>
+              <span
+                className="text-xs px-2 py-0.5 rounded-full"
+                style={{
+                  background: dark ? '#1e293b' : '#e2e8f0',
+                  color: dark ? '#64748b' : '#94a3b8',
+                }}
+              >
+                {formatPeriodo(dados.reservas)}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleExportPdf}
+                className="text-sm px-4 py-2 rounded-lg font-medium cursor-pointer border-0"
+                style={{ background: '#2563eb', color: '#ffffff' }}
+              >
+                Exportar PDF
+              </button>
+              <ThemeToggle />
+              <button
+                onClick={onReset}
+                className="text-sm cursor-pointer bg-transparent border-0"
+                style={{ color: dark ? '#475569' : '#94a3b8' }}
+              >
+                Novo arquivo
+              </button>
+            </div>
+          </div>
+
+          <div className="pb-3">
+            <NavegacaoDashboard secoes={secoes} onToggle={toggle} />
+          </div>
         </div>
       </header>
 
       <main
         ref={dashboardRef}
-        className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-6"
+        className="max-w-6xl mx-auto px-6 py-8 flex flex-col gap-4"
       >
+        {/* Resumo — sempre visível */}
         <ResumoCards resumo={dados.resumo} periodo={dados.periodo} />
-        <InsightsPanel insights={dados.insights} />
 
-        {dados.porMes.length > 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ReceitaMensal dados={dados.porMes} />
-            <OcupacaoMensal dados={dados.porMes} />
+        {/* Financeiro */}
+        <Secao
+          id="financeiro"
+          titulo="Financeiro"
+          icone="💰"
+          aberto={secoes.financeiro}
+          onToggle={() => toggle('financeiro')}
+        >
+          <div className="flex flex-col gap-4">
+            {dados.porMes.length > 1 && <ReceitaMensal dados={dados.porMes} />}
+            <DistribuicaoFinanceira dados={dados.distribuicaoFinanceira} />
           </div>
-        )}
+        </Secao>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DistribuicaoFinanceira dados={dados.distribuicaoFinanceira} />
-          <DistribuicaoDuracao dados={dados.distribuicaoDuracao} />
-        </div>
+        {/* Ocupação */}
+        <Secao
+          id="ocupacao"
+          titulo="Ocupação"
+          icone="🏠"
+          aberto={secoes.ocupacao}
+          onToggle={() => toggle('ocupacao')}
+        >
+          <div className="flex flex-col gap-4">
+            {dados.porMes.length > 1 && <OcupacaoMensal dados={dados.porMes} />}
+            <HeatmapCalendario
+              reservas={dados.reservas}
+              diasOcupados={dados.heatmap}
+            />
+          </div>
+        </Secao>
 
-        <SecaoFiscal
-          porMes={dados.porMes}
-          reservas={dados.reservas}
-          configuracao={dados.configuracao}
-        />
+        {/* Reservas */}
+        <Secao
+          id="reservas"
+          titulo="Reservas"
+          icone="📋"
+          aberto={secoes.reservas}
+          onToggle={() => toggle('reservas')}
+        >
+          <div className="flex flex-col gap-4">
+            <DistribuicaoDuracao dados={dados.distribuicaoDuracao} />
+            <TabelaReservas reservas={dados.reservas} />
+          </div>
+        </Secao>
 
-        <HeatmapCalendario
-          reservas={dados.reservas}
-          diasOcupados={dados.heatmap}
-        />
+        {/* Insights */}
+        <Secao
+          id="insights"
+          titulo="Insights automáticos"
+          icone="💡"
+          aberto={secoes.insights}
+          onToggle={() => toggle('insights')}
+        >
+          <InsightsPanel insights={dados.insights} />
+        </Secao>
 
-        <TabelaReservas reservas={dados.reservas} />
+        {/* Fiscal */}
+        <Secao
+          id="fiscal"
+          titulo="Análise fiscal — Carnê-Leão"
+          icone="🧾"
+          aberto={secoes.fiscal}
+          onToggle={() => toggle('fiscal')}
+        >
+          <SecaoFiscal
+            porMes={dados.porMes}
+            reservas={dados.reservas}
+            configuracao={dados.configuracao}
+          />
+        </Secao>
       </main>
     </div>
   );
