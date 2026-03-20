@@ -8,6 +8,7 @@ import {
   calcularDistribuicaoDuracao,
   calcularDistribuicaoFinanceira,
 } from '../utils/calculos';
+import { gerarInsights } from '../utils/insights';
 
 export function useAirbnbData() {
   const [dados, setDados] = useState(null);
@@ -31,7 +32,7 @@ export function useAirbnbData() {
       const distribuicaoDuracao = calcularDistribuicaoDuracao(reservas);
       const distribuicaoFinanceira = calcularDistribuicaoFinanceira(resumo);
 
-      setDados({
+      const dadosCompletos = {
         reservas,
         periodo,
         resumo,
@@ -39,7 +40,11 @@ export function useAirbnbData() {
         heatmap,
         distribuicaoDuracao,
         distribuicaoFinanceira,
-      });
+      };
+
+      const insights = gerarInsights(dadosCompletos);
+
+      setDados({ ...dadosCompletos, insights });
     } catch (err) {
       setErro(err.message);
     } finally {
