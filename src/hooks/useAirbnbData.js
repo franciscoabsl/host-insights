@@ -12,6 +12,7 @@ import { gerarInsights } from '../utils/insights';
 
 export function useAirbnbData() {
   const [dados, setDados] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -20,31 +21,10 @@ export function useAirbnbData() {
     setErro(null);
     try {
       const reservas = await parseCsvAirbnb(file);
-
       if (reservas.length === 0) {
         throw new Error('Nenhuma reserva encontrada no arquivo.');
       }
-
-      const periodo = detectarPeriodo(reservas);
-      const resumo = calcularResumo(reservas);
-      const porMes = calcularPorMes(reservas);
-      const heatmap = calcularHeatmap(reservas);
-      const distribuicaoDuracao = calcularDistribuicaoDuracao(reservas);
-      const distribuicaoFinanceira = calcularDistribuicaoFinanceira(resumo);
-
-      const dadosCompletos = {
-        reservas,
-        periodo,
-        resumo,
-        porMes,
-        heatmap,
-        distribuicaoDuracao,
-        distribuicaoFinanceira,
-      };
-
-      const insights = gerarInsights(dadosCompletos);
-
-      setDados({ ...dadosCompletos, insights });
+      setPreview(reservas);
     } catch (err) {
       setErro(err.message);
     } finally {
@@ -52,7 +32,44 @@ export function useAirbnbData() {
     }
   };
 
-  const resetar = () => setDados(null);
+  const gerarDashboard = (reservasFiltradas) => {
+    const periodo = detectarPeriodo(reservasFiltradas);
+    const resumo = calcularResumo(reservasFiltradas);
+    const porMes = calcularPorMes(reservasFiltradas);
+    const heatmap = calcularHeatmap(reservasFiltradas);
+    const distribuicaoDuracao = calcularDistribuicaoDuracao(reservasFiltradas);
+    const distribuicaoFinanceira = calcularDistribuicaoFinanceira(resumo);
 
-  return { dados, loading, erro, processar, resetar };
+    const dadosCompletos = {
+      reservas: reservasFiltradas,
+      periodo,
+      resumo,
+      porMes,
+      heatmap,
+      distribuicaoDuracao,
+      distribuicaoFinanceira,
+    };
+
+    const insights = gerarInsights(dadosCompletos);
+    setDados({ ...dadosCompletos, insights });
+    setPreview(null);
+  };
+
+  const cancelarPreview = () => setPreview(null);
+
+  const resetar = () => {
+    setDados(null);
+    setPreview(null);
+  };
+
+  return {
+    dados,
+    preview,
+    loading,
+    erro,
+    processar,
+    gerarDashboard,
+    cancelarPreview,
+    resetar,
+  };
 }
