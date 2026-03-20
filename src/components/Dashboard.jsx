@@ -9,6 +9,7 @@ import { DistribuicaoDuracao } from './charts/DistribuicaoDuracao';
 import { HeatmapCalendario } from './charts/HeatmapCalendario';
 import { TabelaReservas } from './TabelaReservas';
 import { InsightsPanel } from './InsightsPanel';
+import { SecaoFiscal } from './SecaoFiscal';
 
 function formatPeriodo(reservas) {
   if (!reservas.length) return '';
@@ -111,6 +112,12 @@ export function Dashboard({ dados, onReset }) {
           <DistribuicaoFinanceira dados={dados.distribuicaoFinanceira} />
           <DistribuicaoDuracao dados={dados.distribuicaoDuracao} />
         </div>
+
+        <SecaoFiscal
+          porMes={dados.porMes}
+          reservas={dados.reservas}
+          configuracao={dados.configuracao}
+        />
 
         <HeatmapCalendario
           reservas={dados.reservas}

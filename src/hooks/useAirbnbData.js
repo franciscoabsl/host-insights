@@ -10,9 +10,28 @@ import {
 } from '../utils/calculos';
 import { gerarInsights } from '../utils/insights';
 
+export const CONFIGURACAO_INICIAL = {
+  // Fixas mensais
+  iptu: '',
+  condominio: '',
+  internet: '',
+  outrasFixes: '',
+  // Por hospedagem
+  faxina: '',
+  lavanderiaFixa: '',
+  lavanderiaVariavel: false,
+  lavanderiaPorReserva: {},
+  // Variáveis por mês
+  energiaPorMes: {},
+  manutencaoPorMes: {},
+  energiaFixa: '',
+  energiaTipoFixo: false,
+};
+
 export function useAirbnbData() {
   const [dados, setDados] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [configuracao, setConfiguracao] = useState(CONFIGURACAO_INICIAL);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
 
@@ -48,6 +67,7 @@ export function useAirbnbData() {
       heatmap,
       distribuicaoDuracao,
       distribuicaoFinanceira,
+      configuracao,
     };
 
     const insights = gerarInsights(dadosCompletos);
@@ -55,20 +75,27 @@ export function useAirbnbData() {
     setPreview(null);
   };
 
+  const atualizarConfiguracao = (novaConfig) => {
+    setConfiguracao((prev) => ({ ...prev, ...novaConfig }));
+  };
+
   const cancelarPreview = () => setPreview(null);
 
   const resetar = () => {
     setDados(null);
     setPreview(null);
+    setConfiguracao(CONFIGURACAO_INICIAL);
   };
 
   return {
     dados,
     preview,
+    configuracao,
     loading,
     erro,
     processar,
     gerarDashboard,
+    atualizarConfiguracao,
     cancelarPreview,
     resetar,
   };

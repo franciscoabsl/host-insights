@@ -5,6 +5,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function detectarPeriodo(reservas) {
   const meses = new Set(reservas.map((r) => format(r.dataInicio, 'yyyy-MM')));
@@ -56,7 +57,7 @@ export function calcularPorMes(reservas) {
     if (!meses[mes]) {
       meses[mes] = {
         mes,
-        label: format(r.dataInicio, 'MMM/yy'),
+        label: format(r.dataInicio, 'MMM/yy', { locale: ptBR }),
         receita: 0,
         ganhosBrutos: 0,
         taxasServico: 0,
